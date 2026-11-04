@@ -95,7 +95,7 @@ services:
 
   nextcloud-db:
     <<: *common
-    image: mariadb:11.4.13
+    image: mariadb:13.0.2
     profiles: [cloud]
     command: --transaction-isolation=READ-COMMITTED
     environment:
