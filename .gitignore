@@ -24,6 +24,12 @@ htmlcov/
 .env.local
 *.pem
 *.key
+# Host-specific Compose additions, such as GPU devices for transcoding.
+compose.override.yaml
+
+# The default DATA_ROOT and MEDIA_ROOT: service state and media never enter the repo.
+/data/
+/media/
 
 # Runtime output. `logs/` holds the diagnostic artifacts the fixer skills read;
 # they are regenerated on every run and must never be committed.
