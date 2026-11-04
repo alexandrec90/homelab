@@ -55,11 +55,13 @@ head_bytes = 2000
 # `.devkit-structure.txt`, which is committed and may only shrink; the limits below
 # are the script's `DEFAULT_LIMITS` and are shown so a project can see what it holds
 # to. Every key is optional; an unknown limit or rule name is a configuration error.
-#[structure]
+[structure]
+# `homelab/stack.py` is enforced by `tests/test_stack.py`: nothing in the stack runs
+# Python, so no application code imports it, and the orphan rule must not see it.
+entrypoints = ["homelab/stack.py"]
 #paths = ["homelab/", "scripts/"]       # defaults to the app tree, scripts/ and the frontend src
 #exclude = ["homelab/migrations/"]      # generated code the project does not answer for
-#entrypoints = ["homelab/plugins/"]     # loaded by name, so the orphan rule must not see them
-#disabled = []                               # e.g. ["orphan"] for a library whose modules are its API
+#disabled = []                             # e.g. ["orphan"] for a library whose modules are its API
 #
 #[structure.limits]
 #file_lines = 500

@@ -1,19 +1,26 @@
 # Homelab
 
-streaming, cloud, etc.
+Self-hosted media, cloud storage and DNS as one Compose stack (`compose.yaml`).
+
+**This machine is not the host.** Code is written here and distributed through GitHub;
+a separate machine clones the repo and runs the stack. Do not bring it up here to verify
+a change: `docker compose config` and `tests/test_stack.py` are the checks, and Pi-hole's
+port 53 would collide with this workstation's own DNS.
 
 ## Tech Stack
 
 | Layer | Choice |
 | --- | --- |
-| Language | Python 3.12 |
+| Stack | Docker Compose, one profile per service group |
+| Language | Python 3.12, for the rules in `homelab/stack.py` |
 | Tests | pytest |
 | Lint | ruff |
 
 ## Environment Variables
 
 See `.env.example` for every variable. `.env` is gitignored and holds this
-checkout's ports and credentials.
+checkout's ports and credentials. A new variable in `compose.yaml` goes in
+`.env.example` in the same change, and `tests/test_stack.py` fails until it does.
 
 ## Tooling
 

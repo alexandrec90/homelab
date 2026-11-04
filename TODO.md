@@ -1,22 +1,15 @@
 # TODO — Homelab
 
-Freshly generated. These are the things the template deliberately left for you,
-because guessing them wrong is worse than leaving them blank.
+## When the host exists
 
-## Setup
-
-- [ ] Fill in `.env` from `.env.example` (it is gitignored; nothing works without it)
-- [ ] Confirm `python scripts/sync-devkit.py --list` shows a stamped `DEVKIT_VERSION`
-- [ ] Set `DEVKIT_DIR` in CI so the drift check actually gates — a
-      `--check` that prints "nothing to do (skipping)" is checking nothing
-      (once `DEVKIT_VERSION` is stamped it fails instead of skipping; to check
-      drift on a machine with no devkit clone, `pre-commit run devkit-drift`)
-
-## First real work
-
-- [ ] Replace the placeholder in `homelab/` with something that does the job
-- [ ] Delete `tests/test_smoke.py` once real tests exist
+- [ ] Pick the host and follow "Deploying to a host" in `README.md`
+- [ ] Fill in `.env` on the host from `.env.example`
+- [ ] First real start: `docker compose config` has been checked, but no service in
+      `compose.yaml` has been run yet
+- [ ] Decide on remote access (VPN) and on HTTPS for Nextcloud
 
 ## Archive
 
-<!-- Completed items move here. -->
+- [x] `DEVKIT_VERSION` stamped; `DEVKIT_DIR` set by the PR gate's drift job
+- [x] Replace the placeholder in `homelab/` with something that does the job
+- [x] Delete `tests/test_smoke.py` once real tests exist

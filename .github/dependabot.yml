@@ -32,6 +32,19 @@ updates:
           - "minor"
           - "patch"
 
+  # The image tags `compose.yaml` pins. Nothing rolls out until someone pulls on the host.
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+    assignees:
+      - alexandrec90
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
   # The actions the workflows pin. Majors land as individual PRs and the auto-merge
   # classifier holds them for review.
   - package-ecosystem: github-actions
