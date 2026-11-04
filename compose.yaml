@@ -116,7 +116,7 @@ services:
 
   nextcloud-redis:
     <<: *common
-    image: redis:8.8.4-alpine
+    image: redis:8.10.3-alpine
     profiles: [cloud]
     healthcheck:
       test: [CMD, redis-cli, ping]
