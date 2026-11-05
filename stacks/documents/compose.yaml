@@ -35,6 +35,6 @@ services:
 
   paperless-redis:
     <<: *common
-    image: valkey/valkey:9.0.7-alpine
+    image: valkey/valkey:9.1.3-alpine
     volumes:
       - ${DATA_ROOT}/documents/redis:/data
