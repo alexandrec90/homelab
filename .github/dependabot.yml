@@ -33,12 +33,19 @@ updates:
           - "patch"
 
   # The image tags `compose.yaml` pins. Nothing rolls out until someone pulls on the host.
+  # Majors stay out of the bot's hands: auto-merge takes what the gate passes, and this
+  # gate starts no container, so it says nothing about an image. mariadb 11.4 to 13.0 was
+  # green on every check while Nextcloud allowed 12.3 at most.
   - package-ecosystem: docker-compose
     directory: /
     schedule:
       interval: weekly
     assignees:
       - alexandrec90
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
     groups:
       minor-and-patch:
         update-types:
