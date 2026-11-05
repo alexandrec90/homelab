@@ -1,51 +1,51 @@
 # Homelab
 
-Self-hosted media, cloud storage and DNS as one Docker Compose stack. The code is written
-on a development machine and distributed through GitHub; a separate host clones this
-repo and runs it.
+A self-hosted homelab that spreads across as many PCs as you have. Code is written on a
+development machine and distributed through GitHub; each PC clones this repo and runs
+whichever stacks `inventory.toml` gives it.
 
-| Profile | Services | Default port |
+| Stack | Runs | Address |
 | --- | --- | --- |
-| `media` | Jellyfin | 8096 |
-| `media` | Plex | 32400 |
-| `cloud` | Nextcloud, with MariaDB, Redis and a cron worker | 8080 |
-| `dns` | Pi-hole | 53 (DNS), 8053 (admin at `/admin`) |
+| `proxy` | Caddy | every name below |
+| `dns` | Pi-hole, on two machines | `pihole-<machine>` |
+| `homepage` | Homepage, the start page | `dash` |
+| `monitoring` | Uptime Kuma, ntfy, Beszel hub | `status`, `ntfy`, `beszel` |
+| `agent` | Beszel agent, on every machine | |
+| `backup`, `backup-server` | Restic to a central rest-server | |
+| `vpn` | Tailscale, on every machine | |
+| `media` | Jellyfin, Plex | `jellyfin`, `plex` |
+| `audio` | Audiobookshelf, Navidrome | `books`, `music` |
+| `photos` | Immich | `photos` |
+| `cloud` | Nextcloud, with database, cache and cron | `cloud` |
+| `documents` | Paperless-ngx | `docs` |
+| `passwords` | Vaultwarden | `vault` |
+| `sync` | Syncthing | `sync` |
+| `home` | Home Assistant | `ha` |
+| `cameras` | Frigate, not placed until there are cameras | `cameras` |
+| `apps` | Mealie, Actual | `recipes`, `budget` |
+| `ai` | Ollama, Open WebUI | `chat` |
+| `ci` | GitHub Actions runner | |
+| `minecraft`, `valheim` | Game servers | |
 
-Generated from [devkit](https://github.com/alexandrec90/devkit)'s project
-template. The agent harness in `scripts/hooks/` is vendored from there — see
-`CLAUDE.md`, "Vendored agent harness".
+An address is `https://<name>.home.arpa`. The first steps are in
+[docs/deploying.md](docs/deploying.md).
 
-## Deploying to a host
+## How it spreads
 
-The host needs Docker with the Compose plugin, and git. Python is not required.
+`inventory.toml` is the only file that says what runs where. From it, each deploy works
+out the proxy's routes, the dashboard's tiles, Pi-hole's names, and each machine's backup
+target, so services find each other wherever they are. To move a service, move its word
+between two machines' `stacks` lists:
 
 ```bash
-git clone https://github.com/alexandrec90/homelab.git && cd homelab
-cp .env.example .env          # set the passwords, TZ, DATA_ROOT, MEDIA_ROOT
-mkdir -p data/jellyfin/config data/jellyfin/cache media   # or your DATA_ROOT and MEDIA_ROOT
-docker compose up -d
+python -m homelab plan      # check the layout, and that each machine has the memory
+python -m homelab rollout   # copy .env and deploy to every machine, over SSH
 ```
 
-`COMPOSE_PROFILES` in `.env` picks the groups this machine runs, so adding a service is a
-matter of adding it to `compose.yaml` and to a profile. To update:
-
-```bash
-git pull && docker compose pull && docker compose up -d
-```
-
-Before relying on it:
-
-- **Pi-hole needs port 53.** On Ubuntu, `systemd-resolved` already holds it; set
-  `DNSStubListener=no` in `/etc/systemd/resolved.conf` and restart that service first.
-  Then point your router's DNS at the host.
-- **Plex:** set `PLEX_CLAIM` before the first start, with a token from
-  <https://plex.tv/claim>; it expires in minutes.
-- **Hardware transcoding** depends on the host's GPU. Add the `devices:` entries to a
-  gitignored `compose.override.yaml`, which Compose reads automatically.
-- **Do not forward these ports to the internet.** They serve plain HTTP on the LAN. Use a
-  VPN such as Tailscale for remote access.
-- **Back up `DATA_ROOT`.** It holds everything the services write, the Nextcloud database
-  included.
+`rollout` also stops whatever a machine no longer runs. To add a service, create
+`stacks/<name>/` with a `compose.yaml` and a `stack.toml`, then place it. Any stack can
+share a machine with any other, because `tests/test_stack.py` fails if two ever claim one
+host port.
 
 ## Development
 
@@ -55,10 +55,9 @@ uv sync --all-extras          # creates .venv from the committed uv.lock
 pytest
 ```
 
-The tests need no Docker daemon: `tests/test_stack.py` holds `compose.yaml` to the rules
-in `homelab/stack.py`, which are pinned image tags, required secrets, every variable
-documented in `.env.example`, a profile on every service, and no host port published
-twice. `docker compose config` is the check for Compose's own syntax.
+The tests need no Docker daemon. `tests/test_stack.py` holds `stacks/` to the rules in
+`homelab/stack.py`: pinned image tags, required secrets, every variable documented in
+`.env.example`, routes pointing at published ports, and no host port claimed twice.
 
 In VS Code, `Ctrl+Shift+B` runs the default build task and the task quick-pick
 (`Ctrl+Shift+P` → "Run Task") lists everything else, each with a one-line `detail`
@@ -68,8 +67,10 @@ explaining what it costs and what it touches.
 ## Layout
 
 ```text
-compose.yaml             the stack
-homelab/                 rules the stack is held to
+inventory.toml           which machine runs what
+stacks/                  one folder per stack: compose.yaml and stack.toml
+homelab/                 `python -m homelab`, standard library only; and the stack rules
+docs/deploying.md        setting up a machine
 tests/                   tests
 scripts/                 project scripts (Python, each with tests)
 scripts/hooks/           vendored agent harness — edit upstream in devkit
@@ -85,9 +86,12 @@ where `DEVKIT_DIR` is usually unset, `pre-commit run devkit-drift --all-files` i
 same check against the devkit rev pinned in `.pre-commit-config.yaml`.
 
 `.github/dependabot.yml` opens weekly dependency PRs, and
-`.github/workflows/dependabot-automerge.yml` merges them once the gate passes —
-patch/minor bumps of anything, plus majors confined to dev tooling. A major that
-touches a runtime dependency is labelled `needs-manual-merge` and waits for you.
+`.github/workflows/dependabot-automerge.yml` merges **every** one once the gate passes,
+majors included. Nothing waits for a person, so the gate is the only safeguard, and it
+starts no container. For images that means two project-owned guards instead: Dependabot
+never proposes a major (`ignore` in `.github/dependabot.yml`), and `image_limits` in a
+stack's `stack.toml` fails the gate on a version known not to work. Nothing reaches a
+machine until someone runs a rollout.
 
 That auto-merge workflow is **vendored** from devkit, so `sync-devkit.py --check`
 compares it byte-for-byte and editing it here shows up as drift. Keep the gate's title

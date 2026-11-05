@@ -1,0 +1,37 @@
+# Audiobookshelf for audiobooks and podcasts, Navidrome for music. Each reads its own
+# folder under MEDIA_ROOT, so this stack lives wherever the library does.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  audiobookshelf:
+    <<: *common
+    image: ghcr.io/advplyr/audiobookshelf:2.37.2
+    user: ${PUID}:${PGID}
+    ports:
+      - "13378:80"
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+      - ${DATA_ROOT}/audiobookshelf/config:/config
+      - ${DATA_ROOT}/audiobookshelf/metadata:/metadata
+      - ${MEDIA_ROOT}/audiobooks:/audiobooks
+      - ${MEDIA_ROOT}/podcasts:/podcasts
+
+  navidrome:
+    <<: *common
+    image: deluan/navidrome:0.64.2
+    user: ${PUID}:${PGID}
+    ports:
+      - "4533:4533"
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      ND_BASEURL: https://music.${HOMELAB_DOMAIN}
+    volumes:
+      - ${DATA_ROOT}/navidrome:/data
+      - ${MEDIA_ROOT}/music:/music:ro

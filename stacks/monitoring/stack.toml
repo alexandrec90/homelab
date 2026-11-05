@@ -1,0 +1,26 @@
+memory_mb = 400
+requires = ["proxy"]
+
+[[routes]]
+subdomain = "status"
+name = "Uptime Kuma"
+port = 3001
+group = "Infrastructure"
+description = "Is everything up"
+icon = "uptime-kuma.png"
+
+[[routes]]
+subdomain = "ntfy"
+name = "ntfy"
+port = 8081
+group = "Infrastructure"
+description = "Alerts to your phone"
+icon = "ntfy.png"
+
+[[routes]]
+subdomain = "beszel"
+name = "Beszel"
+port = 8090
+group = "Infrastructure"
+description = "CPU, memory and disk"
+icon = "beszel.png"

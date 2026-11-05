@@ -1,0 +1,47 @@
+# Which machine runs what. This is the file to edit: moving a service is moving one word
+# between two `stacks` lists, then `python -m homelab rollout`. `python -m homelab plan`
+# checks a layout without touching anything, and refuses one a machine cannot hold.
+#
+# A machine's name must match its hostname. `address` is its fixed LAN IP, so reserve one
+# on your router. The four below are placeholders for PCs that do not exist yet; with
+# fewer, delete an entry and move its stacks until `plan` passes.
+#
+# A stack's data stays where it was. Before moving one, see "Moving a stack" in
+# docs/deploying.md.
+
+# Resolves through Pi-hole. `home.arpa` is the name reserved for home networks (RFC 8375),
+# so it can never collide with a real site.
+domain = "home.arpa"
+
+# Added to every machine below: monitoring, backups and remote access.
+every_machine = ["agent", "backup", "vpn"]
+
+# Budgets are 14 GB of each 16 GB PC, leaving the rest for the OS and file cache.
+[machines.box-1]
+address = "192.168.1.11"
+memory_mb = 14000
+stacks = ["media", "audio", "photos"]
+# ssh = "alex@192.168.1.11"          # for `rollout`; defaults to the address
+# data_root = "/mnt/big/homelab"     # defaults to data/ in the checkout
+# media_root = "/mnt/big/media"      # defaults to media/ in the checkout
+
+[machines.box-2]
+address = "192.168.1.12"
+memory_mb = 14000
+stacks = ["cloud", "documents", "passwords", "apps", "sync", "minecraft"]
+
+# The always-on essentials. This is the one to keep running above all others: if its
+# Pi-hole is down, box-4's takes over, but nothing is reachable by name without Caddy.
+[machines.box-3]
+address = "192.168.1.13"
+memory_mb = 14000
+stacks = ["proxy", "dns", "homepage", "monitoring", "home", "valheim"]
+# Lets Tailscale devices reach the LAN, and so these names, from away from home.
+# tailscale_routes = "192.168.1.0/24"
+
+[machines.box-4]
+address = "192.168.1.14"
+memory_mb = 14000
+stacks = ["backup-server", "dns", "ci", "ai"]
+
+# Not placed: `cameras` (Frigate), until there are cameras to point it at.

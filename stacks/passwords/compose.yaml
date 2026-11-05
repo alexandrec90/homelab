@@ -1,0 +1,23 @@
+# Vaultwarden, a Bitwarden-compatible password server. Browsers only let the web vault
+# run over HTTPS, so it is used through the proxy. Create your account, then set
+# VAULTWARDEN_SIGNUPS_ALLOWED=false.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  vaultwarden:
+    <<: *common
+    image: vaultwarden/server:1.37.5
+    ports:
+      - "8222:80"
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      DOMAIN: https://vault.${HOMELAB_DOMAIN}
+      SIGNUPS_ALLOWED: ${VAULTWARDEN_SIGNUPS_ALLOWED:-true}
+    volumes:
+      - ${DATA_ROOT}/vaultwarden:/data

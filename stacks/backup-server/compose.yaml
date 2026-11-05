@@ -1,0 +1,36 @@
+# Receives every machine's backups. Put it on a different machine from the data that
+# matters most. Its contents are encrypted by RESTIC_PASSWORD; the login only stops the
+# rest of the LAN from deleting them.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  # Writes the login, then exits. The image's `create_user` needs the file to exist.
+  backup-server-user:
+    image: restic/rest-server:0.14.0
+    restart: "no"
+    entrypoint:
+      - sh
+      - -c
+      - touch "$$PASSWORD_FILE" && create_user backup "$$BACKUP_SERVER_PASSWORD"
+    environment:
+      PASSWORD_FILE: /data/.htpasswd
+      BACKUP_SERVER_PASSWORD: ${BACKUP_SERVER_PASSWORD:?set BACKUP_SERVER_PASSWORD in .env}
+    volumes:
+      - ${DATA_ROOT}/rest-server:/data
+
+  backup-server:
+    <<: *common
+    image: restic/rest-server:0.14.0
+    depends_on:
+      backup-server-user:
+        condition: service_completed_successfully
+    ports:
+      - "8000:8000"
+    volumes:
+      - ${DATA_ROOT}/rest-server:/data

@@ -1,0 +1,20 @@
+memory_mb = 2200
+requires = ["proxy"]
+
+# The range Nextcloud 35 supports: `MIN_MARIADB` and `MAX_MARIADB` in
+# apps/settings/lib/SetupChecks/SupportedDatabase.php on its stable35 branch. Check that
+# file again before moving Nextcloud to a new major, then update these. Going past `max`
+# is not a warning to skip: MARIADB_AUTO_UPGRADE converts the data files on the next
+# deploy, and they do not convert back.
+[[image_limits]]
+image = "mariadb"
+min = "10.11"
+max = "12.3"
+
+[[routes]]
+subdomain = "cloud"
+name = "Nextcloud"
+port = 8080
+group = "Cloud"
+description = "Files, calendar and contacts"
+icon = "nextcloud.png"

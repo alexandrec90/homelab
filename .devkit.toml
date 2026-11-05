@@ -56,9 +56,10 @@ head_bytes = 2000
 # are the script's `DEFAULT_LIMITS` and are shown so a project can see what it holds
 # to. Every key is optional; an unknown limit or rule name is a configuration error.
 [structure]
-# `homelab/stack.py` is enforced by `tests/test_stack.py`: nothing in the stack runs
-# Python, so no application code imports it, and the orphan rule must not see it.
-entrypoints = ["homelab/stack.py"]
+# `homelab/stack.py` is enforced by `tests/test_stack.py`: it imports PyYAML and a host has
+# no virtualenv, so nothing `python -m homelab` runs may import it. `__main__.py` is run by
+# name. The orphan rule must see neither.
+entrypoints = ["homelab/stack.py", "homelab/__main__.py"]
 #paths = ["homelab/", "scripts/"]       # defaults to the app tree, scripts/ and the frontend src
 #exclude = ["homelab/migrations/"]      # generated code the project does not answer for
 #disabled = []                             # e.g. ["orphan"] for a library whose modules are its API

@@ -1,0 +1,10 @@
+memory_mb = 2200
+requires = ["proxy"]
+
+[[routes]]
+subdomain = "docs"
+name = "Paperless"
+port = 8010
+group = "Cloud"
+description = "Searchable documents"
+icon = "paperless-ngx.png"

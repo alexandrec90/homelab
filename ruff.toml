@@ -47,6 +47,8 @@ ignore = ["E101", "E401", "E501", "E701", "E702", "E703", "E731", "E741", "E742"
 # same subprocess allowances as `scripts/**`. These arrive vendored
 # from devkit, so this line must stay in step with devkit's own ruff.toml.
 ".claude/skills/**/*.py" = ["S603", "S607", "S310"]
+# The deploy tool's whole job is running docker, scp and ssh with commands it builds itself.
+"homelab/deploy.py" = ["S603"]
 # Tests: asserts (S101) and hardcoded test passwords (S105).
 "tests/**/*.py" = ["S101", "S105"]
 "scripts/hooks/tests/**/*.py" = ["S101", "S105"]

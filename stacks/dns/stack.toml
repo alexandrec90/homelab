@@ -1,0 +1,12 @@
+memory_mb = 256
+multi = true
+requires = ["proxy"]
+
+[[routes]]
+subdomain = "pihole"
+name = "Pi-hole"
+port = 8053
+path = "/admin"
+group = "Infrastructure"
+description = "DNS and ad blocking"
+icon = "pi-hole.png"

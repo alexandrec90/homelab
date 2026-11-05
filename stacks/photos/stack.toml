@@ -1,0 +1,10 @@
+memory_mb = 5000
+requires = ["proxy"]
+
+[[routes]]
+subdomain = "photos"
+name = "Immich"
+port = 2283
+group = "Cloud"
+description = "Photos and videos"
+icon = "immich.png"

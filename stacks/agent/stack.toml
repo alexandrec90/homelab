@@ -1,0 +1,4 @@
+memory_mb = 64
+multi = true
+optional = true
+requires = ["monitoring"]

@@ -1,0 +1,10 @@
+memory_mb = 8000
+requires = ["proxy"]
+
+[[routes]]
+subdomain = "chat"
+name = "Open WebUI"
+port = 3010
+group = "Apps"
+description = "Chat with local models"
+icon = "open-webui.png"

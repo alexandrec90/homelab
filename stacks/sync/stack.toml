@@ -1,0 +1,13 @@
+memory_mb = 256
+multi = true
+requires = ["proxy"]
+
+[[routes]]
+subdomain = "sync"
+name = "Syncthing"
+port = 8384
+group = "Cloud"
+description = "Folder sync"
+icon = "syncthing.png"
+# Its web UI refuses a Host header it does not recognise.
+host_header = "localhost"

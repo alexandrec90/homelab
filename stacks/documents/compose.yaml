@@ -1,0 +1,40 @@
+# Paperless-ngx, on upstream's SQLite layout. Files dropped in `documents/consume` are
+# scanned, read and filed.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  paperless:
+    <<: *common
+    image: ghcr.io/paperless-ngx/paperless-ngx:3.4.2
+    depends_on:
+      - paperless-redis
+    ports:
+      - "8010:8000"
+    environment:
+      PAPERLESS_DBENGINE: sqlite
+      PAPERLESS_REDIS: redis://paperless-redis:6379
+      PAPERLESS_URL: https://docs.${HOMELAB_DOMAIN}
+      PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY:?set PAPERLESS_SECRET_KEY in .env}
+      PAPERLESS_ADMIN_USER: ${PAPERLESS_ADMIN_USER:-admin}
+      PAPERLESS_ADMIN_PASSWORD: ${PAPERLESS_ADMIN_PASSWORD:?set PAPERLESS_ADMIN_PASSWORD in .env}
+      PAPERLESS_TIME_ZONE: ${TZ:-Etc/UTC}
+      PAPERLESS_OCR_LANGUAGE: ${PAPERLESS_OCR_LANGUAGE:-eng}
+      USERMAP_UID: ${PUID}
+      USERMAP_GID: ${PGID}
+    volumes:
+      - ${DATA_ROOT}/documents/data:/usr/src/paperless/data
+      - ${DATA_ROOT}/documents/media:/usr/src/paperless/media
+      - ${DATA_ROOT}/documents/export:/usr/src/paperless/export
+      - ${DATA_ROOT}/documents/consume:/usr/src/paperless/consume
+
+  paperless-redis:
+    <<: *common
+    image: valkey/valkey:9.0.7-alpine
+    volumes:
+      - ${DATA_ROOT}/documents/redis:/data

@@ -1,0 +1,67 @@
+# Nightly encrypted backup of this machine's DATA_ROOT to the `backup-server` stack, in a
+# repository of its own. MEDIA_ROOT is left out: a library will not fit on one 1 TB disk
+# alongside everything else, and it can be replaced. Live database files are excluded
+# because a copy of them is not consistent; `cloud` and `photos` write dumps instead.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+x-restic: &restic
+  RESTIC_REPOSITORY: ${BACKUP_REPOSITORY}
+  RESTIC_PASSWORD: ${RESTIC_PASSWORD:?set RESTIC_PASSWORD in .env}
+  RESTIC_REST_USERNAME: backup
+  RESTIC_REST_PASSWORD: ${BACKUP_SERVER_PASSWORD:?set BACKUP_SERVER_PASSWORD in .env}
+  TZ: ${TZ:-Etc/UTC}
+
+services:
+  backup:
+    <<: *common
+    image: mazzolino/restic:1.8.2
+    hostname: ${HOMELAB_MACHINE}
+    environment:
+      <<: *restic
+      RUN_ON_STARTUP: "false"
+      BACKUP_CRON: "0 30 3 * * *"
+      RESTIC_BACKUP_SOURCES: /source
+      RESTIC_BACKUP_ARGS: >-
+        --exclude /source/rest-server
+        --exclude /source/nextcloud/db
+        --exclude /source/immich/postgres
+        --exclude /source/immich/model-cache
+        --exclude /source/immich/library/thumbs
+        --exclude /source/immich/library/encoded-video
+        --exclude /source/jellyfin/cache
+        --exclude /source/plex/transcode
+        --exclude /source/ollama
+        --exclude /source/frigate/recordings
+      RESTIC_FORGET_ARGS: >-
+        --keep-daily 7
+        --keep-weekly 4
+        --keep-monthly 6
+    volumes:
+      - ${DATA_ROOT}:/source:ro
+
+  backup-prune:
+    <<: *common
+    image: mazzolino/restic:1.8.2
+    hostname: ${HOMELAB_MACHINE}
+    environment:
+      <<: *restic
+      SKIP_INIT: "true"
+      RUN_ON_STARTUP: "false"
+      PRUNE_CRON: "0 0 5 * * 0"
+
+  backup-check:
+    <<: *common
+    image: mazzolino/restic:1.8.2
+    hostname: ${HOMELAB_MACHINE}
+    environment:
+      <<: *restic
+      SKIP_INIT: "true"
+      RUN_ON_STARTUP: "false"
+      CHECK_CRON: "0 0 6 * * 0"
+      RESTIC_CHECK_ARGS: --read-data-subset=5%

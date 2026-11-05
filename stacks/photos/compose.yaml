@@ -1,0 +1,62 @@
+# Immich, from its v3.3.6 release compose. Service names are prefixed because every stack
+# on a machine shares one network, and `redis` would collide. Immich writes its own nightly
+# database dump to `library/backups`, which the backup stack picks up.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+x-immich-env: &immich-env
+  TZ: ${TZ:-Etc/UTC}
+  DB_HOSTNAME: immich-db
+  DB_USERNAME: immich
+  DB_DATABASE_NAME: immich
+  DB_PASSWORD: ${IMMICH_DB_PASSWORD:?set IMMICH_DB_PASSWORD in .env}
+  REDIS_HOSTNAME: immich-redis
+
+services:
+  immich-server:
+    <<: *common
+    image: ghcr.io/immich-app/immich-server:v3.3.6
+    depends_on:
+      - immich-redis
+      - immich-db
+    devices:
+      - /dev/dri:/dev/dri
+    ports:
+      - "2283:2283"
+    environment:
+      <<: *immich-env
+      IMMICH_MACHINE_LEARNING_URL: http://immich-ml:3003
+    volumes:
+      - ${DATA_ROOT}/immich/library:/data
+      - /etc/localtime:/etc/localtime:ro
+
+  immich-ml:
+    <<: *common
+    image: ghcr.io/immich-app/immich-machine-learning:v3.3.6
+    environment:
+      <<: *immich-env
+    volumes:
+      - ${DATA_ROOT}/immich/model-cache:/cache
+
+  immich-redis:
+    <<: *common
+    image: docker.io/valkey/valkey:9@sha256:c123e3715db63d06d4ad6964884037aa0d5d4d703939b9929954112889708e1d
+    healthcheck:
+      test: redis-cli ping | grep -q PONG || exit 1
+
+  immich-db:
+    <<: *common
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    environment:
+      POSTGRES_PASSWORD: ${IMMICH_DB_PASSWORD:?set IMMICH_DB_PASSWORD in .env}
+      POSTGRES_USER: immich
+      POSTGRES_DB: immich
+      POSTGRES_INITDB_ARGS: --data-checksums
+    volumes:
+      - ${DATA_ROOT}/immich/postgres:/var/lib/postgresql/data
+    shm_size: 128mb

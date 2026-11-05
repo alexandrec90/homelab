@@ -1,0 +1,23 @@
+# Reports this machine to the Beszel hub. Optional until the hub exists: its Add System
+# dialog is where the key and token come from.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  beszel-agent:
+    <<: *common
+    image: henrygd/beszel-agent:0.21.1
+    network_mode: host
+    environment:
+      LISTEN: "45876"
+      KEY: ${BESZEL_KEY:?set BESZEL_KEY in .env}
+      TOKEN: ${BESZEL_TOKEN:?set BESZEL_TOKEN in .env}
+      HUB_URL: ${BESZEL_HUB_URL}
+    volumes:
+      - ${DATA_ROOT}/beszel-agent:/var/lib/beszel-agent
+      - /var/run/docker.sock:/var/run/docker.sock:ro

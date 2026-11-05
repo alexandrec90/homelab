@@ -1,0 +1,21 @@
+# Home Assistant. On the host network so it can discover devices on the LAN, which is
+# also why its port does not appear here. `deploy` seeds a configuration.yaml that trusts
+# the proxy, once, and never overwrites it.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  home-assistant:
+    <<: *common
+    image: ghcr.io/home-assistant/home-assistant:2026.11.0
+    network_mode: host
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+      - ${DATA_ROOT}/home-assistant:/config
+      - /run/dbus:/run/dbus:ro

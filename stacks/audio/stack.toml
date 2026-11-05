@@ -1,0 +1,18 @@
+memory_mb = 768
+requires = ["proxy"]
+
+[[routes]]
+subdomain = "books"
+name = "Audiobookshelf"
+port = 13378
+group = "Media"
+description = "Audiobooks and podcasts"
+icon = "audiobookshelf.png"
+
+[[routes]]
+subdomain = "music"
+name = "Navidrome"
+port = 4533
+group = "Media"
+description = "Music"
+icon = "navidrome.png"
