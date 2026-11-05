@@ -1,0 +1,46 @@
+# Jellyfin and Plex over one read-only library. /dev/dri is Intel Quick Sync: turn it on
+# in each app's transcoding settings. Plex only uses it with a Plex Pass.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  jellyfin:
+    <<: *common
+    image: jellyfin/jellyfin:12.4
+    user: ${PUID}:${PGID}
+    group_add:
+      - ${RENDER_GID}
+    devices:
+      - /dev/dri:/dev/dri
+    ports:
+      - "8096:8096"
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+      - ${DATA_ROOT}/jellyfin/config:/config
+      - ${DATA_ROOT}/jellyfin/cache:/cache
+      - ${MEDIA_ROOT}:/media:ro
+
+  plex:
+    <<: *common
+    image: plexinc/pms-docker:1.43.6.11085-d1e52e169
+    devices:
+      - /dev/dri:/dev/dri
+    ports:
+      - "32400:32400"
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      PLEX_UID: ${PUID}
+      PLEX_GID: ${PGID}
+      # Only read on first start, and each token expires in minutes.
+      PLEX_CLAIM: ${PLEX_CLAIM:-}
+      ADVERTISE_IP: https://plex.${HOMELAB_DOMAIN}
+    volumes:
+      - ${DATA_ROOT}/plex/config:/config
+      - ${DATA_ROOT}/plex/transcode:/transcode
+      - ${MEDIA_ROOT}:/data:ro

@@ -1,0 +1,24 @@
+# Syncthing keeps folders identical between devices, and needs no server in between.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  syncthing:
+    <<: *common
+    image: syncthing/syncthing:2.1.7
+    ports:
+      - "8384:8384"
+      - "22000:22000/tcp"
+      - "22000:22000/udp"
+      - "21027:21027/udp"
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      PUID: ${PUID}
+      PGID: ${PGID}
+    volumes:
+      - ${DATA_ROOT}/syncthing:/var/syncthing

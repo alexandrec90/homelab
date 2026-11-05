@@ -1,0 +1,3 @@
+memory_mb = 128
+multi = true
+optional = true

@@ -1,26 +1,39 @@
 # Homelab
 
-Self-hosted media, cloud storage and DNS as one Compose stack (`compose.yaml`).
+A self-hosted homelab spread across several PCs. `inventory.toml` places the stacks in
+`stacks/` on machines; `python -m homelab` derives everything else from that.
 
-**This machine is not the host.** Code is written here and distributed through GitHub;
-a separate machine clones the repo and runs the stack. Do not bring it up here to verify
-a change: `docker compose config` and `tests/test_stack.py` are the checks, and Pi-hole's
+**This machine is not a host.** Code is written here and distributed through GitHub;
+other PCs clone the repo and run the stacks. Do not bring a stack up here to verify a
+change: `docker compose config` and `tests/test_stack.py` are the checks, and Pi-hole's
 port 53 would collide with this workstation's own DNS.
+
+**`python -m homelab` runs on hosts with no virtualenv.** Everything it imports is
+standard library. Only `homelab/stack.py` imports PyYAML, so nothing else may import it.
+
+**Host ports are unique across every stack, placed or not.** That is what lets any stack
+share a machine with any other, so pick a free port rather than reuse one.
+
+**A green gate says nothing about whether images work together**, because no test starts a
+container, and `dependabot-automerge.yml` merges every green Dependabot PR, majors included.
+When two images have a known version relationship, record it as `image_limits` in the
+stack's `stack.toml`: that is what makes the gate able to refuse it.
 
 ## Tech Stack
 
 | Layer | Choice |
 | --- | --- |
-| Stack | Docker Compose, one profile per service group |
-| Language | Python 3.12, for the rules in `homelab/stack.py` |
+| Stacks | Docker Compose, one file per stack |
+| Language | Python 3.12 here, 3.11 or newer on a host |
 | Tests | pytest |
 | Lint | ruff |
 
 ## Environment Variables
 
-See `.env.example` for every variable. `.env` is gitignored and holds this
-checkout's ports and credentials. A new variable in `compose.yaml` goes in
-`.env.example` in the same change, and `tests/test_stack.py` fails until it does.
+See `.env.example` for every variable. `.env` is gitignored, holds the credentials, and is
+the same on every machine. A new variable in a stack goes in `.env.example` in the same
+change, or in `render.GENERATED_VARS` if the inventory decides it; `tests/test_stack.py`
+fails until it does.
 
 ## Tooling
 

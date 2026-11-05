@@ -1,0 +1,27 @@
+# A Valheim server. Optional: it starts once VALHEIM_SERVER_PASS is set, at five characters
+# or more, or the server refuses to start. Pinned by digest because upstream only
+# publishes a moving `latest`, so Dependabot cannot move this one.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  valheim:
+    <<: *common
+    image: ghcr.io/community-valheim-tools/valheim-server@sha256:f34d67ba8023e343b10ffda0144759a8c8d986f276510460315a01051bed8a6d
+    stop_grace_period: 2m
+    ports:
+      - "2456-2457:2456-2457/udp"
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      SERVER_NAME: ${VALHEIM_SERVER_NAME:-Homelab}
+      WORLD_NAME: ${VALHEIM_WORLD_NAME:-Homelab}
+      SERVER_PASS: ${VALHEIM_SERVER_PASS:?set VALHEIM_SERVER_PASS in .env}
+      SERVER_PUBLIC: "false"
+    volumes:
+      - ${DATA_ROOT}/valheim/config:/config
+      - ${DATA_ROOT}/valheim/data:/opt/valheim

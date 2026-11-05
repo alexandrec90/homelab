@@ -1,0 +1,29 @@
+# Pi-hole. Place it on two machines: if the only one reboots, the network loses DNS.
+# The dnsmasq line sends every *.<domain> name to the proxy, wherever that is.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  pihole:
+    <<: *common
+    image: pihole/pihole:2026.10.1
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8053:80/tcp"
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      FTLCONF_webserver_api_password: ${PIHOLE_PASSWORD:?set PIHOLE_PASSWORD in .env}
+      # Answering on all interfaces is what a published port on a bridge network needs.
+      FTLCONF_dns_listeningMode: ALL
+      FTLCONF_dns_upstreams: ${PIHOLE_UPSTREAMS:-1.1.1.1;9.9.9.9}
+      FTLCONF_misc_dnsmasq_lines: address=/${HOMELAB_DOMAIN}/${PROXY_ADDRESS}
+    volumes:
+      - ${DATA_ROOT}/pihole:/etc/pihole
+    cap_add:
+      - SYS_NICE

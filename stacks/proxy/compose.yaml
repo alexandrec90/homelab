@@ -1,0 +1,22 @@
+# The front door: every <name>.<domain> arrives here and goes to whichever machine runs
+# it. `.generated/Caddyfile` is written from the inventory on deploy.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  caddy:
+    <<: *common
+    image: caddy:2.11.8-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./.generated/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${DATA_ROOT}/caddy/data:/data
+      - ${DATA_ROOT}/caddy/config:/config

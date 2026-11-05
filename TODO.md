@@ -1,12 +1,15 @@
 # TODO — Homelab
 
-## When the host exists
+## When the PCs exist
 
-- [ ] Pick the host and follow "Deploying to a host" in `README.md`
-- [ ] Fill in `.env` on the host from `.env.example`
-- [ ] First real start: `docker compose config` has been checked, but no service in
-      `compose.yaml` has been run yet
-- [ ] Decide on remote access (VPN) and on HTTPS for Nextcloud
+- [ ] Follow `docs/deploying.md`. No container has ever been started: expect fixes
+- [ ] Put the real IPs and machine count in `inventory.toml`
+- [ ] Test a restore from `backup-server`
+- [ ] Add an off-site copy of the backups
+- [ ] Move the always-on jobs here from the workstation: the `social-scraper` collectors and
+      `data-lake`. Those live in their own repositories, so it is a change there
+- [ ] Point a workflow at the `ci` runner with `runs-on: [self-hosted, homelab]`
+- [ ] Keep the two Pi-holes' blocklists in step: only their `home.arpa` setup is shared
 
 ## Archive
 

@@ -1,0 +1,33 @@
+# Ollama with Open WebUI. These PCs have no GPU of use to it, so this is CPU inference:
+# stick to small models. Its budget assumes one model of about 4 GB, loaded on demand.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  ollama:
+    <<: *common
+    image: ollama/ollama:0.40.14
+    ports:
+      - "11434:11434"
+    environment:
+      OLLAMA_KEEP_ALIVE: 5m
+    volumes:
+      - ${DATA_ROOT}/ollama:/root/.ollama
+
+  open-webui:
+    <<: *common
+    image: ghcr.io/open-webui/open-webui:v0.13.0
+    depends_on:
+      - ollama
+    ports:
+      - "3010:8080"
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      WEBUI_SECRET_KEY: ${OPEN_WEBUI_SECRET:?set OPEN_WEBUI_SECRET in .env}
+    volumes:
+      - ${DATA_ROOT}/open-webui:/app/backend/data

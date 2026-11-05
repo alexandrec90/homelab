@@ -1,0 +1,21 @@
+# The start page. Its tiles are generated from the inventory on deploy.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  homepage:
+    <<: *common
+    image: ghcr.io/gethomepage/homepage:v2.7.0
+    ports:
+      - "3000:3000"
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: dash.${HOMELAB_DOMAIN}
+      PUID: ${PUID}
+      PGID: ${PGID}
+    volumes:
+      - ./.generated/homepage:/app/config

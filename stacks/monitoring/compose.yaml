@@ -1,0 +1,43 @@
+# Uptime Kuma watches the services, ntfy delivers the alerts to your phone, and Beszel
+# charts each machine through the `agent` stack.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  uptime-kuma:
+    <<: *common
+    image: louislam/uptime-kuma:2.5.9
+    ports:
+      - "3001:3001"
+    volumes:
+      - ${DATA_ROOT}/uptime-kuma:/app/data
+
+  ntfy:
+    <<: *common
+    image: binwiederhier/ntfy:v2.37.2
+    command: serve
+    ports:
+      - "8081:80"
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      NTFY_BASE_URL: https://ntfy.${HOMELAB_DOMAIN}
+      NTFY_BEHIND_PROXY: "true"
+      NTFY_CACHE_FILE: /var/cache/ntfy/cache.db
+    volumes:
+      - ${DATA_ROOT}/ntfy/cache:/var/cache/ntfy
+      - ${DATA_ROOT}/ntfy/config:/etc/ntfy
+
+  beszel:
+    <<: *common
+    image: henrygd/beszel:0.21.1
+    ports:
+      - "8090:8090"
+    environment:
+      APP_URL: https://beszel.${HOMELAB_DOMAIN}
+    volumes:
+      - ${DATA_ROOT}/beszel:/beszel_data

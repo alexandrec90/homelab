@@ -1,0 +1,10 @@
+memory_mb = 256
+requires = ["proxy"]
+
+[[routes]]
+subdomain = "dash"
+name = "Homepage"
+port = 3000
+group = "Infrastructure"
+description = "This dashboard"
+icon = "homepage.png"

@@ -1,0 +1,10 @@
+memory_mb = 128
+requires = ["proxy", "backup-server"]
+
+[[routes]]
+subdomain = "vault"
+name = "Vaultwarden"
+port = 8222
+group = "Cloud"
+description = "Passwords"
+icon = "vaultwarden.png"

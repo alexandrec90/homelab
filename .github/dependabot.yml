@@ -32,12 +32,17 @@ updates:
           - "minor"
           - "patch"
 
-  # The image tags `compose.yaml` pins. Nothing rolls out until someone pulls on the host.
-  # Majors stay out of the bot's hands: auto-merge takes what the gate passes, and this
-  # gate starts no container, so it says nothing about an image. mariadb 11.4 to 13.0 was
-  # green on every check while Nextcloud allowed 12.3 at most.
+  # The image tags the stacks pin. Nothing rolls out until someone deploys.
+  #
+  # Majors are ignored because this is the one ecosystem the gate cannot judge: the tests
+  # start no container, so a green run says nothing about whether two images work
+  # together, and `dependabot-automerge.yml` merges every Dependabot PR that goes green.
+  # mariadb 11.4 to 13.0 was green on every check while Nextcloud allowed 12.3 at most.
+  # Nextcloud and MariaDB also upgrade their data files on start, with no way back. A major
+  # is a person's change, made from each project's release notes. See docs/deploying.md.
   - package-ecosystem: docker-compose
-    directory: /
+    directories:
+      - /stacks/*
     schedule:
       interval: weekly
     assignees:
@@ -46,6 +51,8 @@ updates:
       - dependency-name: "*"
         update-types:
           - "version-update:semver-major"
+      # Immich names the exact database image each release was built for.
+      - dependency-name: "*immich-app/postgres"
     groups:
       minor-and-patch:
         update-types:

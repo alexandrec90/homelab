@@ -1,0 +1,31 @@
+# Frigate, for security cameras. Not placed by default: there are none yet. Cameras are
+# configured in `frigate/config/config.yml`. Recordings use the disk quickly, so give the
+# machine room, and they are left out of backups. Its port serves TLS with Frigate's own
+# certificate, which the proxy is told to accept.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  frigate:
+    <<: *common
+    image: ghcr.io/blakeblackshear/frigate:0.18.2
+    stop_grace_period: 30s
+    shm_size: 512mb
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+    ports:
+      - "8971:8971"
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+      - ${DATA_ROOT}/frigate/config:/config
+      - ${DATA_ROOT}/frigate/recordings:/media/frigate
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000

@@ -1,0 +1,18 @@
+memory_mb = 768
+requires = ["proxy"]
+
+[[routes]]
+subdomain = "recipes"
+name = "Mealie"
+port = 9925
+group = "Apps"
+description = "Recipes and meal plans"
+icon = "mealie.png"
+
+[[routes]]
+subdomain = "budget"
+name = "Actual"
+port = 5006
+group = "Apps"
+description = "Budgeting"
+icon = "actual-budget.png"

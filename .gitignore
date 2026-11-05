@@ -24,8 +24,9 @@ htmlcov/
 .env.local
 *.pem
 *.key
-# Host-specific Compose additions, such as GPU devices for transcoding.
-compose.override.yaml
+
+# Written by `python -m homelab deploy`, per machine.
+/.generated/
 
 # The default DATA_ROOT and MEDIA_ROOT: service state and media never enter the repo.
 /data/

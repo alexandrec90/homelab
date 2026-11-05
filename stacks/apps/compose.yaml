@@ -1,0 +1,31 @@
+# Mealie for recipes, Actual for budgeting.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  mealie:
+    <<: *common
+    image: ghcr.io/mealie-recipes/mealie:v3.30.0
+    ports:
+      - "9925:9000"
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      BASE_URL: https://recipes.${HOMELAB_DOMAIN}
+      ALLOW_SIGNUP: "false"
+    volumes:
+      - ${DATA_ROOT}/mealie:/app/data
+
+  actual:
+    <<: *common
+    image: actualbudget/actual-server:26.11.0
+    ports:
+      - "5006:5006"
+    volumes:
+      - ${DATA_ROOT}/actual:/data

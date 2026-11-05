@@ -1,0 +1,23 @@
+# A Minecraft server. Optional: it starts once you accept Mojang's EULA yourself by setting
+# MINECRAFT_EULA=TRUE, since that agreement is yours to make. Stays on the LAN or tailnet
+# unless you forward the port.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  minecraft:
+    <<: *common
+    image: itzg/minecraft-server:2026.10.1
+    ports:
+      - "25565:25565"
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      EULA: ${MINECRAFT_EULA:?set MINECRAFT_EULA in .env}
+      MEMORY: 3G
+    volumes:
+      - ${DATA_ROOT}/minecraft:/data

@@ -1,0 +1,26 @@
+# A self-hosted GitHub Actions runner. Optional until the token and repo are set. It holds
+# the Docker socket, which makes it root on this machine: private repositories only. A
+# workflow only reaches it with `runs-on: [self-hosted, homelab]`.
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  github-runner:
+    <<: *common
+    image: myoung34/github-runner:2.338.2
+    environment:
+      RUNNER_SCOPE: repo
+      REPO_URL: ${GITHUB_RUNNER_REPO_URL:?set GITHUB_RUNNER_REPO_URL in .env}
+      ACCESS_TOKEN: ${GITHUB_RUNNER_TOKEN:?set GITHUB_RUNNER_TOKEN in .env}
+      RUNNER_NAME_PREFIX: ${HOMELAB_MACHINE}
+      RANDOM_RUNNER_SUFFIX: "true"
+      LABELS: homelab
+      RUNNER_WORKDIR: /tmp/github-runner
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/github-runner:/tmp/github-runner
