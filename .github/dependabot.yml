@@ -37,6 +37,7 @@ updates:
   # Majors are ignored because this is the one ecosystem the gate cannot judge: the tests
   # start no container, so a green run says nothing about whether two images work
   # together, and `dependabot-automerge.yml` merges every Dependabot PR that goes green.
+  # mariadb 11.4 to 13.0 was green on every check while Nextcloud allowed 12.3 at most.
   # Nextcloud and MariaDB also upgrade their data files on start, with no way back. A major
   # is a person's change, made from each project's release notes. See docs/deploying.md.
   - package-ecosystem: docker-compose

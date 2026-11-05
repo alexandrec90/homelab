@@ -1,5 +1,6 @@
 """The rules in `homelab/stack.py`, and the repository's own stacks held to them."""
 
+import re
 from dataclasses import replace
 from pathlib import Path
 
@@ -170,9 +171,13 @@ def test_one_service_name_in_two_stacks_is_reported():
 
 
 def cloud_with(image):
-    """The repository's own `cloud` stack, with its database image swapped."""
+    """The repository's own `cloud` stack, with its database image swapped.
+
+    Matches any tag: Dependabot moves this pin, and the test must not depend on where to.
+    """
     cloud = load_stacks(REPO)["cloud"]
-    text = cloud.compose_text.replace("mariadb:11.4.13", image)
+    text, swapped = re.subn(r"\bmariadb:\S+", image, cloud.compose_text)
+    assert swapped, "the cloud stack pins no mariadb image"
     return replace(cloud, compose_text=text)
 
 
