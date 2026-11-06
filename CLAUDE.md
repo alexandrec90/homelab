@@ -6,7 +6,8 @@ A self-hosted homelab spread across several PCs. `inventory.toml` places the sta
 **This machine is not a host.** Code is written here and distributed through GitHub;
 other PCs clone the repo and run the stacks. Do not bring a stack up here to verify a
 change: `docker compose config` and `tests/test_stack.py` are the checks, and Pi-hole's
-port 53 would collide with this workstation's own DNS.
+port 53 would collide with this workstation's own DNS. `scripts/e2e.py` is the one
+exception, and it stays one by publishing no port and working in a throwaway copy.
 
 **`python -m homelab` runs on hosts with no virtualenv.** Everything it imports is
 standard library. Only `homelab/stack.py` imports PyYAML, so nothing else may import it.
@@ -82,6 +83,12 @@ and full runs in CI.
 Add this project's specifics *below* — fixtures, isolation rules, markers, what to mock
 and where — but do not restate the policy above. It is vendored and drift-gated; a copy
 here is a fork that will disagree with it the first time either is edited.
+
+A test that needs a Docker daemon or the registries is marked `local`, which `addopts`
+deselects and `scripts/e2e.py` selects (`.claude/rules/local-e2e.md`). They live in
+`tests/test_e2e_stacks.py` and drive a copy of the checkout, never this one. A deploy
+always uses the project name `homelab` and removes its orphans, so the one test that
+deploys fails rather than run on a machine that already has that project.
 
 ## Guardrails
 

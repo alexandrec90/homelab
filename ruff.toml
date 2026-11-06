@@ -52,6 +52,8 @@ ignore = ["E101", "E401", "E501", "E701", "E702", "E703", "E731", "E741", "E742"
 # Tests: asserts (S101) and hardcoded test passwords (S105).
 "tests/**/*.py" = ["S101", "S105"]
 "scripts/hooks/tests/**/*.py" = ["S101", "S105"]
+# The end-to-end tier's whole job is running docker and this repository's own CLI.
+"tests/test_e2e*.py" = ["S603", "S607"]
 
 [format]
 quote-style = "double"
