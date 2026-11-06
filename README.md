@@ -59,6 +59,10 @@ The tests need no Docker daemon. `tests/test_stack.py` holds `stacks/` to the ru
 `homelab/stack.py`: pinned image tags, required secrets, every variable documented in
 `.env.example`, routes pointing at published ports, and no host port claimed twice.
 
+`python scripts/e2e.py` is the tier that does need Docker, run nightly on the workstation:
+Compose accepts every machine, every pinned image is on its registry, and a real `deploy`
+of the proxy, publishing no ports, serves every route. It runs in a throwaway copy.
+
 In VS Code, `Ctrl+Shift+B` runs the default build task and the task quick-pick
 (`Ctrl+Shift+P` → "Run Task") lists everything else, each with a one-line `detail`
 explaining what it costs and what it touches.
