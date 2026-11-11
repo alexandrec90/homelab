@@ -11,7 +11,7 @@ x-common: &common
 services:
   ollama:
     <<: *common
-    image: ollama/ollama:0.40.14
+    image: ollama/ollama:0.40.15
     ports:
       - "11434:11434"
     environment:
@@ -21,7 +21,7 @@ services:
 
   open-webui:
     <<: *common
-    image: ghcr.io/open-webui/open-webui:v0.13.0
+    image: ghcr.io/open-webui/open-webui:v0.13.3
     depends_on:
       - ollama
     ports:
