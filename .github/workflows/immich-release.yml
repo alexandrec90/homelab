@@ -1,0 +1,38 @@
+name: Immich release
+
+# Dependabot cannot track Immich: it lists every registry tag, and Immich's GHCR
+# repositories hold one per pull-request build, so the listing ran into GHCR's rate
+# limit. `scripts/immich-release.py` reads the GitHub release instead.
+#
+# This run goes red while a minor or patch release is waiting. The failure-issue sweep
+# turns that into an issue and closes it once the run is green again. The fix is
+# `python scripts/immich-release.py --write`, after reading the release notes.
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check for a release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Compare the pinned release with the latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/immich-release.py
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: immich-release
+          path: logs/immich-release.md
