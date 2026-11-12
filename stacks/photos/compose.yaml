@@ -1,4 +1,4 @@
-# Immich, from its v3.3.6 release compose. Service names are prefixed because every stack
+# Immich, from its v3.4.1 release compose. Service names are prefixed because every stack
 # on a machine shares one network, and `redis` would collide. Immich writes its own nightly
 # database dump to `library/backups`, which the backup stack picks up.
 x-common: &common
@@ -20,7 +20,7 @@ x-immich-env: &immich-env
 services:
   immich-server:
     <<: *common
-    image: ghcr.io/immich-app/immich-server:v3.3.6
+    image: ghcr.io/immich-app/immich-server:v3.4.1
     depends_on:
       - immich-redis
       - immich-db
@@ -37,7 +37,7 @@ services:
 
   immich-ml:
     <<: *common
-    image: ghcr.io/immich-app/immich-machine-learning:v3.3.6
+    image: ghcr.io/immich-app/immich-machine-learning:v3.4.1
     environment:
       <<: *immich-env
     volumes:

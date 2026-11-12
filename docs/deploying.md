@@ -114,8 +114,12 @@ time, and only after confirming the machine's backup is recent:
   `stacks/cloud/stack.toml`.
 - **MariaDB** must stay inside those limits. `MARIADB_AUTO_UPGRADE` converts the data files
   at startup, so the way back from a bad upgrade is a restore.
-- **Immich:** change `immich-server` and `immich-ml` together, and copy the database image
-  from that release's `docker-compose.yml`. Read its release notes: they list required steps.
+- **Immich** is not updated by Dependabot. Its registry holds too many tags for Dependabot
+  to list. The weekly `Immich release` workflow goes red when a release is waiting. Read
+  its release notes, which list any required steps, then run
+  `python scripts/immich-release.py --write`. That moves the server, machine-learning and
+  database images together, to what the release's own `docker-compose.yml` names. A major
+  also needs `--major`.
 
 ## Backups
 

@@ -51,7 +51,13 @@ updates:
       - dependency-name: "*"
         update-types:
           - "version-update:semver-major"
-      # Immich names the exact database image each release was built for.
+      # Immich is tracked by `scripts/immich-release.py` and its weekly workflow instead.
+      # Its GHCR repositories carry a tag per pull-request build, so listing them took
+      # this job about 5,000 requests, until GHCR answered 429 and the job failed. A
+      # release is one API call, and it names the exact database image it was built
+      # for, so all three images move together.
+      - dependency-name: "*immich-app/immich-server"
+      - dependency-name: "*immich-app/immich-machine-learning"
       - dependency-name: "*immich-app/postgres"
     groups:
       minor-and-patch:
