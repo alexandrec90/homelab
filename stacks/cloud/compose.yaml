@@ -11,7 +11,7 @@ x-common: &common
 services:
   nextcloud:
     <<: *common
-    image: nextcloud:35.0.2-apache
+    image: nextcloud:35.0.3-apache
     depends_on:
       nextcloud-db:
         condition: service_healthy
@@ -45,7 +45,7 @@ services:
   # server nobody is looking at.
   nextcloud-cron:
     <<: *common
-    image: nextcloud:35.0.2-apache
+    image: nextcloud:35.0.3-apache
     entrypoint: /cron.sh
     depends_on:
       nextcloud:
