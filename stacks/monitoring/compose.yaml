@@ -11,7 +11,7 @@ x-common: &common
 services:
   uptime-kuma:
     <<: *common
-    image: louislam/uptime-kuma:2.5.9
+    image: louislam/uptime-kuma:2.5.11
     ports:
       - "3001:3001"
     volumes:
@@ -19,7 +19,7 @@ services:
 
   ntfy:
     <<: *common
-    image: binwiederhier/ntfy:v2.37.2
+    image: binwiederhier/ntfy:v2.38.0
     command: serve
     ports:
       - "8081:80"
@@ -34,7 +34,7 @@ services:
 
   beszel:
     <<: *common
-    image: henrygd/beszel:0.21.1
+    image: henrygd/beszel:0.21.2
     ports:
       - "8090:8090"
     environment:

@@ -11,7 +11,7 @@ x-common: &common
 services:
   beszel-agent:
     <<: *common
-    image: henrygd/beszel-agent:0.21.1
+    image: henrygd/beszel-agent:0.21.2
     network_mode: host
     environment:
       LISTEN: "45876"

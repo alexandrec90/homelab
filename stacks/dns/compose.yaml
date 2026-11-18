@@ -11,7 +11,7 @@ x-common: &common
 services:
   pihole:
     <<: *common
-    image: pihole/pihole:2026.10.1
+    image: pihole/pihole:2026.11.0
     ports:
       - "53:53/tcp"
       - "53:53/udp"

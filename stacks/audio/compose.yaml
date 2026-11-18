@@ -11,7 +11,7 @@ x-common: &common
 services:
   audiobookshelf:
     <<: *common
-    image: ghcr.io/advplyr/audiobookshelf:2.37.2
+    image: ghcr.io/advplyr/audiobookshelf:2.38.0
     user: ${PUID}:${PGID}
     ports:
       - "13378:80"

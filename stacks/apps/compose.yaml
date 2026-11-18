@@ -10,7 +10,7 @@ x-common: &common
 services:
   mealie:
     <<: *common
-    image: ghcr.io/mealie-recipes/mealie:v3.30.0
+    image: ghcr.io/mealie-recipes/mealie:v3.31.0
     ports:
       - "9925:9000"
     environment:

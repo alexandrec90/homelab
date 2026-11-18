@@ -12,7 +12,7 @@ x-common: &common
 services:
   minecraft:
     <<: *common
-    image: itzg/minecraft-server:2026.10.1
+    image: itzg/minecraft-server:2026.11.0
     ports:
       - "25565:25565"
     environment:
