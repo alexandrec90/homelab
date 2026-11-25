@@ -13,7 +13,7 @@ x-common: &common
 services:
   frigate:
     <<: *common
-    image: ghcr.io/blakeblackshear/frigate:0.18.2
+    image: ghcr.io/blakeblackshear/frigate:0.18.3
     stop_grace_period: 30s
     shm_size: 512mb
     devices:

@@ -12,7 +12,7 @@ x-common: &common
 services:
   home-assistant:
     <<: *common
-    image: ghcr.io/home-assistant/home-assistant:2026.11.2
+    image: ghcr.io/home-assistant/home-assistant:2026.11.3
     network_mode: host
     environment:
       TZ: ${TZ:-Etc/UTC}
