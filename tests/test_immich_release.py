@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import ssl
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -268,3 +269,34 @@ def test_main_writes_the_failure_to_the_artifact(sandbox, monkeypatch):
     monkeypatch.setattr(ir, "fetch_latest", broken)
     assert ir.main([]) == 2
     assert "network is down" in ir.ARTIFACT.read_text(encoding="utf-8")
+
+
+def test_the_tls_context_trusts_a_partial_chain_and_still_verifies():
+    # On 3.12 a Windows store holding only Sectigo's intermediate failed api.github.com.
+    context = ir.tls_context()
+    assert context.verify_flags & ssl.VERIFY_X509_PARTIAL_CHAIN
+    assert context.verify_mode == ssl.CERT_REQUIRED
+    assert context.check_hostname
+
+
+def test_every_request_goes_through_the_tls_context(monkeypatch):
+    seen: list[object] = []
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self):
+            return b"body"
+
+    def urlopen(request, timeout, context):
+        seen.append(context)
+        return Response()
+
+    monkeypatch.setattr(ir.urllib.request, "urlopen", urlopen)
+    assert ir._get("https://api.github.com/x", "application/json") == b"body"
+    assert isinstance(seen[0], ssl.SSLContext)
+    assert seen[0].verify_flags & ssl.VERIFY_X509_PARTIAL_CHAIN

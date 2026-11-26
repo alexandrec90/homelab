@@ -29,6 +29,7 @@ import argparse
 import json
 import os
 import re
+import ssl
 import sys
 import urllib.request
 from dataclasses import dataclass
@@ -154,6 +155,20 @@ def report(chosen: Plan, *, wrote: bool) -> tuple[str, int]:
     return "\n".join(lines) + "\n", 1
 
 
+def tls_context() -> ssl.SSLContext:
+    """The default context plus `VERIFY_X509_PARTIAL_CHAIN`, which Python 3.13 sets itself.
+
+    On Windows the trust store is whatever roots the machine has cached, and Windows
+    fetches a root only when its own TLS stack first needs it. A PC that never had
+    Sectigo's root holds just its intermediate, so the pinned 3.12 failed api.github.com
+    with "unable to get issuer certificate" while 3.13+ reached it (2026-11-26). A
+    certificate in the trust store is still the anchor, and the hostname is still checked.
+    """
+    context = ssl.create_default_context()
+    context.verify_flags |= ssl.VERIFY_X509_PARTIAL_CHAIN
+    return context
+
+
 def _get(url: str, accept: str) -> bytes:
     headers = {"Accept": accept, "User-Agent": "homelab-immich-release"}
     token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
@@ -163,7 +178,7 @@ def _get(url: str, accept: str) -> bytes:
     if token and url.startswith("https://api.github.com/"):
         headers["Authorization"] = f"Bearer {token}"
     request = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(request, timeout=30) as response:
+    with urllib.request.urlopen(request, timeout=30, context=tls_context()) as response:
         return response.read()
 
 
