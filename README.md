@@ -59,7 +59,8 @@ The tests need no Docker daemon. `tests/test_stack.py` holds `stacks/` to the ru
 `homelab/stack.py`: pinned image tags, required secrets, every variable documented in
 `.env.example`, routes pointing at published ports, and no host port claimed twice.
 
-`python scripts/e2e.py` is the tier that does need Docker, run nightly on the workstation:
+`python scripts/e2e.py --ci` is the tier that does need Docker, run by the PR Gate's `E2E`
+job on every default-branch commit:
 Compose accepts every machine, every pinned image is on its registry, and a real `deploy`
 of the proxy, publishing no ports, serves every route. It runs in a throwaway copy.
 

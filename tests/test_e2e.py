@@ -1,4 +1,4 @@
-"""`scripts/e2e.py`: the local end-to-end tier and the contract the nightly job reads."""
+"""`scripts/e2e.py`: the end-to-end tiers and the contract the `E2E` job and devkit read."""
 
 from __future__ import annotations
 
@@ -119,6 +119,26 @@ def test_a_run_that_executed_nothing_is_red_whoever_ran_it(found):
     assert lines[-1] == "e2e: no local test executed, which is not a pass"
 
 
+def test_an_empty_ci_run_names_the_tier_it_selected():
+    code, lines = e2e.verdict(0, [], strict=True, marker=e2e.CI_MARKER)
+    assert code == 1
+    assert lines[-1] == "e2e: no ci_e2e test executed, which is not a pass"
+
+
+@pytest.mark.parametrize(
+    ("args", "expected"),
+    [
+        ([], ("local", [])),
+        (["tests/test_a.py::x"], ("local", ["tests/test_a.py::x"])),
+        (["--ci"], ("ci_e2e", [])),
+        (["--ci", "tests/test_a.py::x"], ("ci_e2e", ["tests/test_a.py::x"])),
+        (["tests/test_a.py::x", "--ci"], ("ci_e2e", ["tests/test_a.py::x"])),
+    ],
+)
+def test_selection_picks_the_runner_s_tier_only_for_the_flag(args, expected):
+    assert e2e.selection(args) == expected
+
+
 def test_an_empty_run_keeps_pytest_s_own_exit_code():
     assert e2e.verdict(5, [], strict=False)[0] == 5
 
@@ -153,6 +173,11 @@ def test_named_ids_replace_the_directory_and_stay_inside_the_tier():
     argv = e2e.pytest_argv("py", Path("r.xml"), ["tests/test_a.py::test_x"])
     assert "tests" not in argv
     assert argv[3:6] == ["tests/test_a.py::test_x", "-m", "local"]
+
+
+def test_the_ci_tier_is_selected_by_its_own_marker():
+    argv = e2e.pytest_argv("py", Path("r.xml"), (), e2e.CI_MARKER)
+    assert argv[3:6] == ["tests", "-m", "ci_e2e"]
 
 
 def fake_pytest(tmp_path: Path, junit: str | None, returncode: int, seen: dict[str, object]):
@@ -202,6 +227,17 @@ def test_main_clears_the_last_report_so_a_dead_run_cannot_read_green(checkout):
     assert not report.exists()
 
 
+def test_main_with_the_ci_flag_runs_the_runner_s_tier_and_drops_the_flag(checkout, capsys):
+    seen: dict[str, object] = {}
+    code = e2e.main(["--ci"], run=fake_pytest(checkout, "<testsuite/>", 0, seen))
+    argv = seen["argv"]
+    assert isinstance(argv, list)
+    assert argv[3:6] == ["tests", "-m", "ci_e2e"]
+    assert "--ci" not in argv
+    assert code == 1
+    assert "e2e: no ci_e2e test executed" in capsys.readouterr().out
+
+
 def test_main_fails_a_skip_only_under_the_scheduler(checkout, monkeypatch):
     junit = """<testsuite>
 <testcase classname="tests.test_a" name="test_x"/>
@@ -226,6 +262,12 @@ def collected(*args: str) -> str:
 def test_the_default_run_deselects_the_tier_and_the_script_s_selection_reaches_it():
     tier = "tests/test_e2e_stacks.py::"
     assert tier not in collected()
-    selected = collected("-m", e2e.MARKER)
+    selected = collected("-m", e2e.CI_MARKER)
     assert tier in selected
     assert "tests/test_stack.py::" not in selected
+
+
+def test_no_test_needs_the_workstation_which_is_what_e2e_ci_in_devkit_toml_claims():
+    """`.devkit.toml` says `e2e = "ci"`, so devkit's nightly job no longer runs `local`."""
+    assert "::" not in collected("-m", e2e.MARKER)
+    assert 'e2e = "ci"' in (REPO_ROOT / ".devkit.toml").read_text(encoding="utf-8")

@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
-"""The local end-to-end tier: every test that needs this workstation rather than a runner.
+"""The end-to-end tiers: the tests no ordinary run reaches, on a runner or on this workstation.
 
-devkit's nightly `devkit-local-e2e` job runs this in the checkout, and
 `.claude/rules/local-e2e.md` is the contract: exit 0 green, anything else red, each failing
-test printed as pytest's `FAILED <id>` line. What it runs is every test marked `local`,
-which `addopts` in `pyproject.toml` deselects from every other run: they need a Docker
-daemon and the image registries, and no other test in this repository touches either.
+test printed as pytest's `FAILED <id>` line. Two markers, both deselected by `addopts` in
+`pyproject.toml`, so the ordinary suite touches no Docker daemon and no registry:
 
-**A skip is a failure when the scheduler runs it** (`DEVKIT_E2E` set): the checkout is the
-one the tests were written for, so nothing has a reason left to skip, and each skip is
-printed as a `FAILED` line naming its reason. By hand the skips are listed and do not fail
-the run. No test here skips today: a stopped Docker Desktop fails each one, saying so.
+- `--ci` runs every test marked `ci_e2e`: the ones a hosted runner can run. The `E2E` job
+  in `.github/workflows/pr-gate.yml` runs it on the default branch, on `ubuntu-latest`,
+  which has a Docker daemon and the public registries. Every Docker test is one of these.
+- with no flag it runs every test marked `local`, the ones that need this workstation.
+  None does today, so `.devkit.toml` records `e2e = "ci"` and devkit's nightly
+  `devkit-local-e2e` job leaves this checkout alone; by hand the run is red, as an empty
+  run is.
+
+**A skip is a failure when a scheduler runs it** (`DEVKIT_E2E` set, as the `E2E` job and
+devkit's job both set it): the environment is the one the tests were written for, so
+nothing has a reason left to skip, and each skip is printed as a `FAILED` line naming its
+reason. By hand the skips are listed and do not fail the run. No test here skips today:
+a missing or stopped Docker daemon fails each one, saying so.
 
 **A run that executed nothing is red**, whoever ran it: a green from zero tests is a skip
 reported as a pass.
@@ -41,6 +48,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 # Spelled as devkit's `e2e-pass.ENV_FLAG` spells it.
 ENV_FLAG = "DEVKIT_E2E"
 MARKER = "local"
+# What `--ci` selects instead: the tests a hosted runner can run.
+CI_FLAG = "--ci"
+CI_MARKER = "ci_e2e"
 JUNIT = Path("logs") / "e2e-junit.xml"
 VENV_INTERPRETERS = (Path(".venv") / "Scripts" / "python.exe", Path(".venv") / "bin" / "python")
 # The nightly job runs with nobody at the keyboard, and a console window opening under
@@ -113,7 +123,15 @@ def first_line(message: str) -> str:
     return message.strip().splitlines()[0] if message.strip() else "no reason"
 
 
-def verdict(code: int, found: list[Case], strict: bool) -> tuple[int, list[str]]:
+def selection(args: Sequence[str]) -> tuple[str, list[str]]:
+    """`(marker, test ids)` for the command line: `--ci` anywhere picks the runner's tier."""
+    named = [arg for arg in args if arg != CI_FLAG]
+    return (CI_MARKER if len(named) != len(args) else MARKER), named
+
+
+def verdict(
+    code: int, found: list[Case], strict: bool, marker: str = MARKER
+) -> tuple[int, list[str]]:
     """`(exit code, lines to print)` for pytest's `code` and the cases it reported.
 
     pytest already printed its own `FAILED` lines; these add what it words differently, an
@@ -132,21 +150,23 @@ def verdict(code: int, found: list[Case], strict: bool) -> tuple[int, list[str]]
         for case in skips
     ]
     if not ran:
-        return code or 1, [*lines, f"e2e: no {MARKER} test executed, which is not a pass"]
+        return code or 1, [*lines, f"e2e: no {marker} test executed, which is not a pass"]
     if strict and skips:
         return code or 1, [*lines, f"e2e: {len(skips)} test(s) skipped under the scheduled run"]
     return code, lines
 
 
-def pytest_argv(python: str, report: Path, named: Sequence[str] = ()) -> list[str]:
-    """`-m` comes after `addopts`, so it replaces their `not local`."""
+def pytest_argv(
+    python: str, report: Path, named: Sequence[str] = (), marker: str = MARKER
+) -> list[str]:
+    """`-m` comes after `addopts`, so it replaces their `not local and not ci_e2e`."""
     return [
         python,
         "-m",
         "pytest",
         *(named or ["tests"]),
         "-m",
-        MARKER,
+        marker,
         "-rfE",
         # This tier must not rewrite the last-failed set `run-tests.py --changed` reads.
         "-p",
@@ -156,7 +176,7 @@ def pytest_argv(python: str, report: Path, named: Sequence[str] = ()) -> list[st
 
 
 def main(argv: list[str] | None = None, run: Runner = subprocess.run) -> int:
-    named = sys.argv[1:] if argv is None else argv
+    marker, named = selection(sys.argv[1:] if argv is None else argv)
     report = REPO_ROOT / JUNIT
     report.parent.mkdir(parents=True, exist_ok=True)
     report.unlink(missing_ok=True)
@@ -165,7 +185,7 @@ def main(argv: list[str] | None = None, run: Runner = subprocess.run) -> int:
     # hidden console it was given, not to the pipe the pass reads. Passed on as bytes, so
     # no character pytest printed can raise on the way through a narrower stdout encoding.
     done = run(
-        pytest_argv(python, report, named),
+        pytest_argv(python, report, named, marker),
         cwd=REPO_ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -175,7 +195,7 @@ def main(argv: list[str] | None = None, run: Runner = subprocess.run) -> int:
     sys.stdout.flush()
     sys.stdout.buffer.write(done.stdout or b"")
     sys.stdout.buffer.flush()
-    code, lines = verdict(done.returncode, cases(report), scheduled())
+    code, lines = verdict(done.returncode, cases(report), scheduled(), marker)
     for line in lines:
         print(line, flush=True)
     print(f"e2e: exit {code}, report in {JUNIT.as_posix()}", flush=True)

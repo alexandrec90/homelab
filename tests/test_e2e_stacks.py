@@ -1,13 +1,17 @@
-"""The stacks against real Docker: the tier `scripts/e2e.py` runs and no other run does.
+"""The stacks against real Docker: the tier `scripts/e2e.py --ci` runs and no other run does.
 
 Everything else in `tests/` reads text, so nothing there can say Docker accepts what the
 deploy tool produces, that a pin still names an image, or that the proxy loads the config
 generated for it. These drive `python -m homelab` the way a host does.
 
+They need a Docker daemon and the public registries and nothing of this workstation's, so
+they are `ci_e2e`: the `E2E` job in `pr-gate.yml` runs them on `ubuntu-latest`. No real
+host, NAS or LAN address is reached: the inventory is replaced with `10.0.0.x` machines.
+
 Every test works in a copy of the checkout under `tmp_path`, so a real `.env`,
-`.generated/` and `data/` are never touched. No stack runs as written, because this
-workstation is not a host and its ports are not free: the one container started is the
-proxy, with its published ports taken out, and it publishes nothing while it runs.
+`.generated/` and `data/` are never touched. No stack runs as written, because the machine
+running them is not a host and its ports may not be free: the one container started is
+the proxy, with its published ports taken out, and it publishes nothing while it runs.
 """
 
 from __future__ import annotations
@@ -26,7 +30,7 @@ from homelab import envfile, stack
 from homelab.deploy import PROJECT
 from homelab.fleet import PROXY_STACK, load_fleet, load_stacks
 
-pytestmark = [pytest.mark.local, pytest.mark.usefixtures("docker")]
+pytestmark = [pytest.mark.ci_e2e, pytest.mark.usefixtures("docker")]
 
 REPO = Path(__file__).resolve().parent.parent
 PLACEHOLDER = "e2e-placeholder"
