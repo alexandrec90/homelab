@@ -111,3 +111,7 @@ enabled = false
 
 [frontend]
 enabled = false
+
+[delivery]
+# Every end-to-end test is `ci_e2e`, run by the PR Gate's E2E job: none needs this PC.
+e2e = "ci"

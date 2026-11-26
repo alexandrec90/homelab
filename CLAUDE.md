@@ -6,8 +6,9 @@ A self-hosted homelab spread across several PCs. `inventory.toml` places the sta
 **This machine is not a host.** Code is written here and distributed through GitHub;
 other PCs clone the repo and run the stacks. Do not bring a stack up here to verify a
 change: `docker compose config` and `tests/test_stack.py` are the checks, and Pi-hole's
-port 53 would collide with this workstation's own DNS. `scripts/e2e.py` is the one
-exception, and it stays one by publishing no port and working in a throwaway copy.
+port 53 would collide with this workstation's own DNS. `scripts/e2e.py --ci` is the one
+exception, and it stays one by publishing no port and working in a throwaway copy; it
+runs in the PR Gate's `E2E` job, so it never needs to run here.
 
 **`python -m homelab` runs on hosts with no virtualenv.** Everything it imports is
 standard library. Only `homelab/stack.py` imports PyYAML, so nothing else may import it.
@@ -15,8 +16,9 @@ standard library. Only `homelab/stack.py` imports PyYAML, so nothing else may im
 **Host ports are unique across every stack, placed or not.** That is what lets any stack
 share a machine with any other, so pick a free port rather than reuse one.
 
-**A green gate says nothing about whether images work together**, because no test starts a
-container, and `dependabot-automerge.yml` merges every green Dependabot PR, majors included.
+**A green gate says nothing about whether images work together**, because no PR run starts
+a container (the `E2E` job starts only the proxy, and only after the merge), and
+`dependabot-automerge.yml` merges every green Dependabot PR, majors included.
 When two images have a known version relationship, record it as `image_limits` in the
 stack's `stack.toml`: that is what makes the gate able to refuse it.
 
@@ -84,8 +86,11 @@ Add this project's specifics *below* — fixtures, isolation rules, markers, wha
 and where — but do not restate the policy above. It is vendored and drift-gated; a copy
 here is a fork that will disagree with it the first time either is edited.
 
-A test that needs a Docker daemon or the registries is marked `local`, which `addopts`
-deselects and `scripts/e2e.py` selects (`.claude/rules/local-e2e.md`). They live in
+A test that needs a Docker daemon or the registries is marked `ci_e2e`, which `addopts`
+deselects and `scripts/e2e.py --ci` selects; the PR Gate's `E2E` job runs it on the
+default branch, on `ubuntu-latest`. `local` (`.claude/rules/local-e2e.md`) is for a test
+that needs this workstation itself, and none does, which is why `.devkit.toml` says
+`e2e = "ci"`. They live in
 `tests/test_e2e_stacks.py` and drive a copy of the checkout, never this one. A deploy
 always uses the project name `homelab` and removes its orphans, so the one test that
 deploys fails rather than run on a machine that already has that project.
